@@ -11,6 +11,7 @@ import qrcode
 from io import BytesIO
 import base64
 from supabase import create_client, Client
+import json
 
 # ==========================================
 # 0. SUPABASE CONFIGURATION
@@ -34,7 +35,7 @@ supabase: Client = init_supabase()
 TRANSLATIONS = {
     "English": {
         "app_name": "NabhaSeva AI",
-        "tagline": "Clinical OS v7.0 + Intelligent Ops",
+        "tagline": "Clinical OS v7.2 + Intelligent Ops",
         "role_patient": "PATIENT",
         "role_patient_desc": "Triage & Booking",
         "role_staff": "STAFF",
@@ -72,11 +73,12 @@ TRANSLATIONS = {
         "distance_label": "Total Distance",
         "unit_status": "Unit Status",
         "add_unit_header": "Commission New Mobile Unit",
-        "add_unit_btn": "Add to Fleet"
+        "add_unit_btn": "Add to Fleet",
+        "history_tab": "My Medical Records"
     },
     "Hindi": {
         "app_name": "नाभा सेवा एआई",
-        "tagline": "क्लिनिकल ओएस v7.0 + इंटेलिजेंट ऑप्स",
+        "tagline": "क्लिनिकल ओएस v7.2 + इंटेलिजेंट ऑप्स",
         "role_patient": "रोगी",
         "role_patient_desc": "जांच और बुकिंग",
         "role_staff": "कर्मचारी",
@@ -114,11 +116,12 @@ TRANSLATIONS = {
         "distance_label": "कुल दूरी",
         "unit_status": "यूनिट स्थिति",
         "add_unit_header": "नई मोबाइल यूनिट जोड़ें",
-        "add_unit_btn": "बेड़े में जोड़ें"
+        "add_unit_btn": "बेड़े में जोड़ें",
+        "history_tab": "मेरे मेडिकल रिकॉर्ड"
     },
     "Punjabi": {
         "app_name": "ਨਾਭਾ ਸੇਵਾ ਏ.ਆਈ",
-        "tagline": "ਕਲੀਨਿਕਲ ਓਪਰੇਟਿੰਗ ਸਿਸਟਮ v7.0",
+        "tagline": "ਕਲੀਨਿਕਲ ਓਪਰੇਟਿੰਗ ਸਿਸਟਮ v7.2",
         "role_patient": "ਮਰੀਜ਼",
         "role_patient_desc": "ਜਾਂਚ ਅਤੇ ਬੁਕਿੰਗ",
         "role_staff": "ਸਟਾਫ",
@@ -156,7 +159,8 @@ TRANSLATIONS = {
         "distance_label": "ਕੁੱਲ ਦੂਰੀ",
         "unit_status": "ਯੂਨਿਟ ਸਥਿਤੀ",
         "add_unit_header": "ਨਵੀਂ ਮੋਬਾਈਲ ਯੂਨਿਟ ਸ਼ਾਮਲ ਕਰੋ",
-        "add_unit_btn": "ਸ਼ਾਮਲ ਕਰੋ"
+        "add_unit_btn": "ਸ਼ਾਮਲ ਕਰੋ",
+        "history_tab": "ਮੇਰੇ ਮੈਡੀਕਲ ਰਿਕਾਰਡ"
     }
 }
 
@@ -164,7 +168,7 @@ TRANSLATIONS = {
 # 2. SYSTEM CONFIGURATION & STATE
 # ==========================================
 st.set_page_config(
-    page_title="NabhaSeva AI | Clinical OS v7.0",
+    page_title="NabhaSeva AI | Clinical OS v7.2",
     page_icon="🧬",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -350,9 +354,138 @@ st.markdown("""
 # 4. ACCESSIBILITY ENGINE
 # ==========================================
 def inject_accessibility():
+    """
+    Injects a floating Accessibility Menu into the main Streamlit app.
+    Features: TTS on Hover & UI Magnification.
+    """
     components.html("""
     <script>
-        const parentDoc = window.parent.document;
+        const doc = window.parent.document;
+        
+        // 1. Create the Menu Container
+        if (!doc.getElementById('acc-menu')) {
+            const menu = doc.createElement('div');
+            menu.id = 'acc-menu';
+            menu.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                z-index: 999999;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+            `;
+            doc.body.appendChild(menu);
+
+            // 2. Main Toggle Button
+            const btn = doc.createElement('button');
+            btn.innerText = '♿';
+            btn.style.cssText = `
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #00f2fe, #4facfe);
+                border: none;
+                color: #000;
+                font-size: 24px;
+                cursor: pointer;
+                box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+                transition: transform 0.2s;
+            `;
+            btn.onclick = () => {
+                const panel = doc.getElementById('acc-panel');
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            };
+            menu.appendChild(btn);
+
+            // 3. The Options Panel
+            const panel = doc.createElement('div');
+            panel.id = 'acc-panel';
+            panel.style.cssText = `
+                display: none;
+                background: rgba(15, 23, 42, 0.95);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 15px;
+                border-radius: 15px;
+                margin-bottom: 10px;
+                color: white;
+                width: 200px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            `;
+            
+            // --- Feature A: Text-to-Speech (TTS) ---
+            let ttsEnabled = false;
+            const ttsBtn = doc.createElement('button');
+            ttsBtn.innerText = '🔊 TTS: OFF';
+            ttsBtn.style.cssText = 'width: 100%; padding: 8px; margin-bottom: 8px; background: #334155; color: white; border: none; border-radius: 8px; cursor: pointer;';
+            
+            const speakHandler = (e) => {
+                if (!ttsEnabled) return;
+                const text = e.target.innerText || e.target.alt;
+                if (text && text.length > 2) {
+                    window.parent.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    // Attempt to detect language broadly (Hindi/English mix usually works on auto)
+                    utterance.rate = 1.0; 
+                    window.parent.speechSynthesis.speak(utterance);
+                    e.target.style.outline = "2px solid #00f2fe"; // Highlight
+                }
+            };
+
+            const leaveHandler = (e) => {
+                if (!ttsEnabled) return;
+                window.parent.speechSynthesis.cancel();
+                e.target.style.outline = "none";
+            };
+
+            ttsBtn.onclick = () => {
+                ttsEnabled = !ttsEnabled;
+                ttsBtn.innerText = ttsEnabled ? '🔊 TTS: ON' : '🔊 TTS: OFF';
+                ttsBtn.style.background = ttsEnabled ? '#00f2fe' : '#334155';
+                ttsBtn.style.color = ttsEnabled ? '#000' : '#fff';
+                
+                const targets = doc.querySelectorAll('p, h1, h2, h3, span, button, div.stMarkdown, a');
+                if (ttsEnabled) {
+                    targets.forEach(el => {
+                        el.addEventListener('mouseenter', speakHandler);
+                        el.addEventListener('mouseleave', leaveHandler);
+                    });
+                } else {
+                    targets.forEach(el => {
+                        el.removeEventListener('mouseenter', speakHandler);
+                        el.removeEventListener('mouseleave', leaveHandler);
+                        el.style.outline = "none";
+                    });
+                    window.parent.speechSynthesis.cancel();
+                }
+            };
+            panel.appendChild(ttsBtn);
+
+            // --- Feature B: Magnification (Zoom) ---
+            let zoomLevel = 1.0;
+            const zoomBtn = doc.createElement('button');
+            zoomBtn.innerText = '🔍 Zoom: 100%';
+            zoomBtn.style.cssText = 'width: 100%; padding: 8px; background: #334155; color: white; border: none; border-radius: 8px; cursor: pointer;';
+            
+            zoomBtn.onclick = () => {
+                if (zoomLevel === 1.0) zoomLevel = 1.1;
+                else if (zoomLevel === 1.1) zoomLevel = 1.25;
+                else zoomLevel = 1.0;
+                
+                doc.body.style.zoom = zoomLevel; // Works best in Chrome/Edge
+                doc.body.style.transformOrigin = "0 0"; // Fallback for some browsers
+                
+                zoomBtn.innerText = `🔍 Zoom: ${Math.round(zoomLevel * 100)}%`;
+                zoomBtn.style.background = zoomLevel > 1.0 ? '#00f2fe' : '#334155';
+                zoomBtn.style.color = zoomLevel > 1.0 ? '#000' : '#fff';
+            };
+            panel.appendChild(zoomBtn);
+
+            // Assemble
+            menu.insertBefore(panel, btn);
+        }
     </script>
     """, height=0)
 
@@ -960,7 +1093,7 @@ def render_dashboard():
     # PATIENT PORTAL
     # ==========================
     if st.session_state.selected_role == "Patient":
-        p_tabs = st.tabs([f"🩺 {T('dash_triage')}", f"🚚 {T('dash_mobile')}"])
+        p_tabs = st.tabs([f"🩺 {T('dash_triage')}", f"🚚 {T('dash_mobile')}", f"📂 {T('history_tab')}"])
         
         with p_tabs[0]:
             c1, c2 = st.columns([1.5, 1])
@@ -1093,8 +1226,28 @@ def render_dashboard():
             st.markdown("<h3>🚚 Live Mobile Clinics (MHU)</h3>", unsafe_allow_html=True)
             st.info("Check when the Mobile Health Unit (MHU) is visiting your village.")
             
+            # --- NEW: VILLAGE STATUS CHECK ---
+            st.markdown("<h4>🔍 Check My Village</h4>", unsafe_allow_html=True)
+            village_names = [v['name'] for v in VILLAGES_DB.values()]
+            my_village = st.selectbox("Select Your Village", village_names)
+            
             units = db_io("mobile_units")
             active_units = [u for u in units if u.get('status') == 'En Route' and u.get('current_route')]
+            
+            mhu_coming = False
+            if st.button("Check Schedule"):
+                if active_units:
+                    for u in active_units:
+                        route = u['current_route'].get('path', [])
+                        for idx, stop in enumerate(route):
+                            if stop['type'] == 'Stop' and stop['name'] == my_village:
+                                eta = (datetime.now() + timedelta(minutes=30*(idx))).strftime("%I:%M %p")
+                                st.success(f"✅ GOOD NEWS! {u['unit_name']} is scheduled to visit {my_village} today at approx {eta}.")
+                                mhu_coming = True
+                if not mhu_coming:
+                    st.error(f"No Mobile Unit is currently scheduled for {my_village} today.")
+
+            st.divider()
             
             if active_units:
                 for u in active_units:
@@ -1110,12 +1263,48 @@ def render_dashboard():
             else:
                 st.warning("No Mobile Clinics are currently active. Check back later.")
             st.markdown("</div>", unsafe_allow_html=True)
+            
+        with p_tabs[2]:
+            st.markdown(f"<div class='glass-panel'><h3>📂 {T('history_tab')}</h3>", unsafe_allow_html=True)
+            hist_data = db_io("hist")
+            if hist_data:
+                # Filter by current logged in user name
+                my_hist = [h for h in hist_data if h['Patient'] == st.session_state.user]
+                if my_hist:
+                    df = pd.DataFrame(my_hist)
+                    st.dataframe(df, use_container_width=True)
+                else:
+                    st.info("No past medical records found for your account.")
+            else:
+                st.info("No records found.")
+            st.markdown("</div>", unsafe_allow_html=True)
 
     # ==========================
     # STAFF PORTAL
     # ==========================
     elif st.session_state.selected_role == "Staff":
         st.info("Welcome, Staff Member / Volunteer. View your assignments below.")
+        
+        # --- NEW: VOLUNTEER ASSIGNMENT CARD ---
+        users = db_io("users")
+        current_user_data = users.get(next((u for u, d in users.items() if d['name'] == st.session_state.user), None), {})
+        assigned_doc_name = current_user_data.get('assigned_doc', None)
+        
+        if assigned_doc_name:
+            st.markdown(f"""
+            <div class='emergency-alert' style='background: #0f172a; border-color: #00f2fe; text-align:left;'>
+                <h3 style='margin:0; color:#00f2fe'>📋 My Assignment</h3>
+                <p style='font-size:1.2rem'>You are assigned to assist: <b>{assigned_doc_name}</b></p>
+                <p>Please report to their cabin immediately.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Show live status of that doctor
+            docs = db_io("docs")
+            if assigned_doc_name in docs:
+                doc_info = docs[assigned_doc_name]
+                st.markdown(f"**Doctor Status:** {doc_info['status']} | **Room:** {doc_info['room']} | **Patients Served:** {doc_info['last_token_num']}")
+
         tab_roster, tab_logs = st.tabs([f"👨‍⚕️ {T('roster_control')}", f"📂 {T('queue_monitor')}"])
         
         with tab_roster:
@@ -1241,7 +1430,9 @@ def render_dashboard():
             st.markdown(f"<div class='glass-panel'><h3>{T('vol_pending')}</h3>", unsafe_allow_html=True)
             vols = db_io("vols")
             pending_vols = [v for v in vols if v['status'] == 'Pending']
-            
+            all_docs = db_io("docs")
+            doc_names = list(all_docs.keys())
+
             if not pending_vols:
                 st.success("No pending applications.")
             else:
@@ -1254,12 +1445,21 @@ def render_dashboard():
                             st.write(f"**Contact:** {v['contact']}")
                             st.caption(f"Applied: {v['created_at']}")
                         with c_b:
-                            # --- APPROVED LOGIC WITH ASSIGNMENT ---
+                            # --- MANUAL ASSIGNMENT UI ---
+                            target_doc = st.selectbox("Assign to (Optional)", ["Auto-Assign"] + doc_names, key=f"sel_{v['id']}")
+                            
                             if st.button(f"✅ {T('vol_approve')}", key=f"app_{v['id']}"):
-                                # Find doctor needing help
-                                doc_name, load = find_doctor_needing_help()
-                                if doc_name:
-                                    assign_msg = f"Assigned to {doc_name} (Load: {load} patients)"
+                                # Determine Assignment
+                                final_doc = None
+                                load = 0
+                                if target_doc == "Auto-Assign":
+                                    final_doc, load = find_doctor_needing_help()
+                                else:
+                                    final_doc = target_doc
+                                    load = all_docs[final_doc].get('last_token_num', 0)
+
+                                if final_doc:
+                                    assign_msg = f"Assigned to {final_doc} (Load: {load} patients)"
                                     # Update Volunteer Status
                                     db_io("vols_update", {"id": v['id'], "status": "Approved"}, "write")
                                     
@@ -1270,7 +1470,7 @@ def render_dashboard():
                                         "pwd": "123", 
                                         "name": v['full_name'], 
                                         "role": "Staff",
-                                        "assigned_doc": doc_name # Store assignment in user profile
+                                        "assigned_doc": final_doc # Store assignment in user profile
                                     }
                                     db_io("users", users, "write")
                                     
@@ -1278,7 +1478,7 @@ def render_dashboard():
                                     time.sleep(2)
                                     st.rerun()
                                 else:
-                                    st.warning("No doctors found to assign.")
+                                    st.warning("No doctors available.")
 
                             if st.button(f"❌ {T('vol_reject')}", key=f"rej_{v['id']}"):
                                 db_io("vols_update", {"id": v['id'], "status": "Rejected"}, "write")
@@ -1287,13 +1487,35 @@ def render_dashboard():
                                 st.rerun()
             
             st.markdown("---")
-            st.markdown("<h3>Active Volunteers</h3>", unsafe_allow_html=True)
+            st.markdown("<h3>Active Volunteers & Reassignment</h3>", unsafe_allow_html=True)
             approved_vols = [v for v in vols if v['status'] == 'Approved']
+            users = db_io("users")
+            
             if approved_vols:
                 for v in approved_vols:
-                    # Fetch assignment if possible, currently stored in users table which is harder to link back efficiently without ID, 
-                    # but for display we just show they are active.
-                    st.markdown(f"✅ **{v['full_name']}** - {v['role']}")
+                    # Find user record
+                    user_id = None
+                    user_data = None
+                    for uid, udata in users.items():
+                        if udata['name'] == v['full_name']:
+                            user_id = uid
+                            user_data = udata
+                            break
+                    
+                    current_assign = user_data.get('assigned_doc', 'Unassigned') if user_data else 'Unknown'
+                    
+                    with st.expander(f"✅ {v['full_name']} (Assigned: {current_assign})"):
+                        c_r1, c_r2 = st.columns([3, 1])
+                        with c_r1:
+                            new_assign = st.selectbox("Reassign to:", doc_names, index=doc_names.index(current_assign) if current_assign in doc_names else 0, key=f"re_{v['id']}")
+                        with c_r2:
+                            if st.button("Update", key=f"upd_{v['id']}"):
+                                if user_id:
+                                    users[user_id]['assigned_doc'] = new_assign
+                                    db_io("users", users, "write")
+                                    st.success(f"Reassigned to {new_assign}")
+                                    time.sleep(1)
+                                    st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
         
         with tab5:
@@ -1343,15 +1565,19 @@ def render_dashboard():
                 
                 with st.form("assign_route_form"):
                     units = db_io("mobile_units")
-                    unit_names = [u['unit_name'] for u in units]
-                    target_unit = st.selectbox("Assign to Unit", unit_names)
-                    if st.form_submit_button("Deploy Unit"):
-                        u_id = next((u['id'] for u in units if u['unit_name'] == target_unit), None)
-                        if u_id:
-                            db_io("units_update", {"id": u_id, "status": "En Route", "current_route": route_data}, "write")
-                            st.success(f"{target_unit} is now En Route!")
-                            time.sleep(1)
-                            st.rerun()
+                    if not units:
+                        st.warning("⚠️ No Mobile Units found in fleet. Please commission a new unit above to enable deployment.")
+                    else:
+                        unit_names = [u['unit_name'] for u in units]
+                        target_unit = st.selectbox("Assign to Unit", unit_names)
+                        if st.form_submit_button("Deploy Unit"):
+                            u_id = next((u['id'] for u in units if u['unit_name'] == target_unit), None)
+                            if u_id:
+                                # IMPORTANT: Pass route_data as a proper dictionary/JSON for Supabase
+                                db_io("units_update", {"id": u_id, "status": "En Route", "current_route": route_data}, "write")
+                                st.success(f"{target_unit} is now En Route!")
+                                time.sleep(1)
+                                st.rerun()
 
             st.markdown("---")
             st.markdown("<h4>Fleet Status</h4>", unsafe_allow_html=True)
@@ -1360,7 +1586,14 @@ def render_dashboard():
                 for u in units:
                     status_color = "#00ff7f" if u['status'] == "En Route" else "#aaa"
                     with st.container():
-                        st.markdown(f"""<div style="border:1px solid {status_color}; padding:10px; border-radius:10px; margin-bottom:10px"><b>{u['unit_name']}</b> | Driver: {u['driver']}<br>Status: <span style="color:{status_color}">{u['status']}</span></div>""", unsafe_allow_html=True)
+                        col_u1, col_u2 = st.columns([3,1])
+                        with col_u1:
+                            st.markdown(f"""<div style="border:1px solid {status_color}; padding:10px; border-radius:10px; margin-bottom:10px"><b>{u['unit_name']}</b> | Driver: {u['driver']}<br>Status: <span style="color:{status_color}">{u['status']}</span></div>""", unsafe_allow_html=True)
+                        with col_u2:
+                            if u['status'] == "En Route":
+                                if st.button("Return", key=f"ret_{u['id']}"):
+                                    db_io("units_update", {"id": u['id'], "status": "Idle", "current_route": {}}, "write")
+                                    st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
     render_language_selector()
