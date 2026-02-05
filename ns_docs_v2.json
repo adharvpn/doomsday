@@ -1,0 +1,68 @@
+{
+    "Dr. Amrit Pal": {
+        "spec": "Cardiologist",
+        "status": "Available",
+        "room": "101",
+        "tokens": 10
+    },
+    "Dr. Simran Kaur": {
+        "spec": "Pediatrician",
+        "status": "Available",
+        "room": "202",
+        "tokens": 12
+    },
+    "Dr. Vikas Goyal": {
+        "spec": "General Physician",
+        "status": "Available",
+        "room": "204",
+        "tokens": 15
+    },
+    "Dr. Harpreet Singh": {
+        "spec": "Orthopedic",
+        "status": "Away",
+        "room": "105",
+        "tokens": 8
+    },
+    "Dr. Anjali Rao": {
+        "spec": "Neurologist",
+        "status": "Available",
+        "room": "301",
+        "tokens": 5
+    },
+    "Dr. Kabir Khan": {
+        "spec": "Dermatologist",
+        "status": "Available",
+        "room": "305",
+        "tokens": 20
+    },
+    "Dr. S. Mehra": {
+        "spec": "ENT Specialist",
+        "status": "Available",
+        "room": "108",
+        "tokens": 14
+    },
+    "Dr. Priya Das": {
+        "spec": "Gynecologist",
+        "status": "Available",
+        "room": "402",
+        "tokens": 10
+    },
+    "Dr. Amit Shah": {
+        "spec": "Psychiatrist",
+        "status": "Away",
+        "room": "501",
+        "tokens": 6
+    },
+    "Dr. R. K. Mittal": {
+        "spec": "Oncologist",
+        "status": "Available",
+        "room": "601",
+        "tokens": 4
+    },
+    "Dr. Sunny Deol": {
+        "spec": "Urologist",
+        "status": "Available",
+        "room": "110",
+        "tokens": 12
+    }
+}

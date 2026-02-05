@@ -1,0 +1,54 @@
+{
+    "Dr. Amrit Pal": {
+        "spec": "Cardiologist",
+        "status": "Away",
+        "room": "101",
+        "tokens": 10
+    },
+    "Dr. Simran Kaur": {
+        "spec": "Pediatrician",
+        "status": "Available",
+        "room": "202",
+        "tokens": 10,
+        "last_token_num": 2,
+        "last_date": "2026-02-04"
+    },
+    "Dr. Vikas Goyal": {
+        "spec": "General Physician",
+        "status": "Available",
+        "room": "204",
+        "tokens": 0,
+        "last_token_num": 15,
+        "last_date": "2026-02-04"
+    },
+    "Dr. Harpreet Singh": {
+        "spec": "Orthopedic",
+        "status": "Surgery",
+        "room": "105",
+        "tokens": 8
+    },
+    "Dr Lee Kebum": {
+        "spec": "Neurologist",
+        "status": "Available",
+        "room": "111",
+        "tokens": 4,
+        "last_token_num": 0,
+        "last_date": ""
+    },
+    "Dr Arjun Reddy": {
+        "spec": "ENT Specialist",
+        "status": "Available",
+        "room": "190",
+        "tokens": 11,
+        "last_token_num": 0,
+        "last_date": ""
+    },
+    "Dr Ben Dover": {
+        "spec": "Gynecologist",
+        "status": "Available",
+        "room": "157",
+        "tokens": 0,
+        "last_token_num": 3,
+        "last_date": "2026-02-05"
+    }
+}

@@ -1,0 +1,10 @@
+streamlit
+pandas
+plotly
+qrcode
+supabase
+base64
+datetime
+random
+math
+time

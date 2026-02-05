@@ -1,0 +1,17 @@
+{
+    "admin": {
+        "pwd": "123",
+        "role": "Admin",
+        "name": "Chief Administrator"
+    },
+    "nurse1": {
+        "pwd": "123",
+        "role": "Staff",
+        "name": "Nurse Joy"
+    },
+    "patient1": {
+        "pwd": "123",
+        "role": "Patient",
+        "name": "Arjun Verma"
+    }
+}

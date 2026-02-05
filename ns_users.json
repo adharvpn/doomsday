@@ -1,0 +1,22 @@
+{
+    "admin": {
+        "pwd": "123",
+        "role": "Admin",
+        "name": "System Admin"
+    },
+    "123456": {
+        "pwd": "ad@26",
+        "name": "sam k tejass",
+        "role": "Patient"
+    },
+    "567890": {
+        "pwd": "AD@25",
+        "name": "Dr kailas",
+        "role": "Staff"
+    },
+    "13579": {
+        "pwd": "ad@24",
+        "name": "Alex",
+        "role": "Admin"
+    }
+}
