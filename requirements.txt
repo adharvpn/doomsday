@@ -3,7 +3,5 @@ pandas
 plotly
 qrcode
 supabase
-datetime
-random
 math
 time
