@@ -3,4 +3,4 @@ pandas
 plotly
 qrcode
 supabase
-time
+pillow
